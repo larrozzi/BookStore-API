@@ -170,10 +170,15 @@ namespace BookStore_API.Controllers
                 return InternalError($"{e.Message} - {e.InnerException}");
             }
         }
-
+        /// <summary>
+        /// Removes a Book
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Delete(int id)
         {
@@ -183,13 +188,14 @@ namespace BookStore_API.Controllers
                 _logger.LogInfo($"{location}: Delete Attempted on record with id: {id}");
                 if (id < 1)
                 {
-                    _logger.LogInfo($"{location}: Failed to retrieve record with id: {id}");
-                    return NotFound();
+                    _logger.LogInfo($"{location}: Delete failed with bad data - id: {id}");
+                    return BadRequest();
                 }
-                if (!ModelState.IsValid)
+                var isExists = await _bookRepository.isExists(id);
+                if (!isExists)
                 {
-                    _logger.LogWarn($"{location}: Data was Incomplete");
-                    return BadRequest(ModelState);
+                    _logger.LogWarn($"{location}: Failed to retrieve record with id: {id}");
+                    return NotFound();
                 }
                 var book = await _bookRepository.FindById(id);
                 var isSuccess = await _bookRepository.Delete(book);

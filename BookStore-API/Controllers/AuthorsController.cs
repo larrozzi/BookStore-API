@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using BookStore_API.DTOs;
 using BookStore_API.Data;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookStore_API.Controllers
 {
@@ -34,6 +35,7 @@ namespace BookStore_API.Controllers
         /// </summary>
         /// <returns>List of Authors</returns>
         [HttpGet]
+        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAuthors()
@@ -58,6 +60,7 @@ namespace BookStore_API.Controllers
         /// <param name="id"></param>
         /// <returns> An Author record</returns>
         [HttpGet("{id}")]
+        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -89,6 +92,7 @@ namespace BookStore_API.Controllers
         /// <param name="authorDTO"></param>
         /// <returns></returns>
         [HttpPost]
+        [Authorize(Roles = "Administrator")] //(Roles = "Administrator")
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -132,6 +136,7 @@ namespace BookStore_API.Controllers
         /// <param name="authorDTO"></param>
         /// <returns></returns>
         [HttpPut("{id}")]
+        [Authorize(Roles = "Administrator, Customer")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -172,34 +177,40 @@ namespace BookStore_API.Controllers
                 return InternalError($"{e.Message} - {e.InnerException}");
             }
         }
-
+        /// <summary>
+        /// Deletes an Author
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Customer")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Delete(int id)
         {
+            var location = GetControllerActionNames();
             try
             {
-                _logger.LogInfo($"Author with id: {id} Delete Attempted");
+                _logger.LogInfo($"{location}: Delete Attempted on record with id: {id}");
                 if (id < 1)
                 {
-                    _logger.LogInfo($"Author Delete failed with bad data");
+                    _logger.LogInfo($"{location}: Delete failed with bad data - id: {id}");
                     return BadRequest();
                 }
                 var isExists = await _authorRepository.isExists(id);
                 if (!isExists)
                 {
-                    _logger.LogWarn($"Author with id: {id} was not found");
+                    _logger.LogWarn($"{location}: Failed to retrieve record with id: {id}");
                     return NotFound();
                 }
                 var author = await _authorRepository.FindById(id);
-            
                 var IsSuccess = await _authorRepository.Delete(author);
                 if (!IsSuccess)
-                    return InternalError("Author Delete failed");
-
-                _logger.LogWarn($"Author with id: {id} was successfully deleted");
+                {
+                    return InternalError($"{location}: Delete failed for record with id: {id}");
+                }
+                _logger.LogInfo($"{location}: Record with id: {id} successfully deleted");
                 return NoContent();
             }
             catch (Exception e )
