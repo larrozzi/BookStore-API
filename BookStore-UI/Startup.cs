@@ -12,6 +12,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Blazored.LocalStorage;
+using System.IdentityModel.Tokens.Jwt;
+using BookStore_UI.Providers;
+using Microsoft.AspNetCore.Components.Authorization;
 
 namespace BookStore_UI
 {
@@ -30,9 +34,13 @@ namespace BookStore_UI
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
+            services.AddBlazoredLocalStorage();
             services.AddHttpClient();
+            services.AddScoped<ApiAuthenticationStateProvider>();
+            services.AddScoped<AuthenticationStateProvider>(p =>
+            p.GetRequiredService<ApiAuthenticationStateProvider>());
+            services.AddScoped<JwtSecurityTokenHandler>();
             services.AddTransient<IAuthenticationRepository, AuthenticationRepository>();
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
