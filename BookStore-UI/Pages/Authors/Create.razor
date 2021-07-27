@@ -1,9 +1,11 @@
 ﻿@page "/authors/create/"
-
+@attribute [Authorize(Roles = "Administrator")]
 @inject IAuthorRepository _repo
 @inject NavigationManager _navManager
 
-<h3>Create New Author</h3>
+<h3 class="card-title">Create New Author</h3>
+<hr/>
+<br />
 
 @if (!isSuccess)
 {
@@ -39,7 +41,7 @@
 
 @code {
     private Author Model = new Author();
-    private bool isSuccess= true;
+    private bool isSuccess = true;
 
     private async Task CreateAuthor()
     {
