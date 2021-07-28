@@ -45,8 +45,18 @@ else
                             <img src="uploads/@book.Image" style="height:50px;width:50px" />
                         </td>
                         <td>@book.Title</td>
-                        <td>@book.Price</td>
-                        <td>@book.Author.Firstname @book.Author.Lastname</td>
+                        <td>@book.Isbn</td>
+                        <td>@string.Format("{0:C}", book.Price)</td>
+                        <td>
+                            @if (@book.Author == null)
+                            {
+                                <span class="text-muted">No Author Recorded</span>
+                            }
+                            else
+                            {
+                                <span>@book.Author.Firstname @book.Author.Lastname</span>
+                            }
+                        </td>
                         <td>
                             <a href="/books/view/@book.Id" class="btn btn-primary">
                                 <span class="oi oi-book"></span>

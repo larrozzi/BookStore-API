@@ -1,8 +1,17 @@
-﻿@page "/books/view/{id}"
-@inject IBookRepository _repo
-@inject NavigationManager _navManager
+﻿@page "/books/delete/{Id}"
+@attribute [Authorize(Roles = "Administrator")]
 
-<h3>View Book</h3>
+@inject IBookRepository _repo
+@inject IFileUpload _fileUpload
+@inject NavigationManager _navManager
+<h3>Are you sure you want to delete this record</h3>
+<hr />
+<br />
+
+@if (!isSuccess)
+{
+    <ErrorMessage Message="Something went wrong with the delete operation" />
+}
 
 @if (int.Parse(Id) < 1 || string.IsNullOrWhiteSpace(Id))
 {
@@ -66,27 +75,20 @@ else
 
     </div>
 }
-<button @onclick="GoToEdit" class="btn btn-outline-warning">
-    <span class="oi oi-pencil"></span>
-    Edit Book
-</button>
-<button @onclick="GoToDelete" class="btn btn-outline-danger">
-    <span class="oi oi-circle-x"></span>
+<button @onclick="DeleteBook" class="btn btn-danger">
+    <span class="oi oi-delete"></span>
     Delete Book
 </button>
-<a href="/books/" class="btn btn-outline-secondary">
+<button @onclick="BackToList" class="btn btn-outline-secondary">
     <span class="oi oi-media-skip-backward"></span>
     Back To List
-</a>
-
-
-
-
+</button>
 
 @code {
     [Parameter]
     public string Id { get; set; }
     private Book Model = new Book();
+    private bool isSuccess = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -94,12 +96,18 @@ else
         Model = await _repo.Get(Endpoints.BooksEndpoint, id);
     }
 
-    private void GoToEdit()
+    private async Task DeleteBook()
     {
-        _navManager.NavigateTo($"/books/edit/{Model.Id}");
+        _fileUpload.RemoveFile(Model.Image);
+        isSuccess = await _repo.Delete(Endpoints.BooksEndpoint, Model.Id);
+        if (isSuccess)
+        {
+            BackToList();
+        }
     }
-    private void GoToDelete()
+
+    private void BackToList()
     {
-        _navManager.NavigateTo($"/books/delete/{Model.Id}");
+        _navManager.NavigateTo("/books/");
     }
 }
