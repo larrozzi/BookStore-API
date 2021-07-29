@@ -5,6 +5,7 @@
 @inject IAuthorRepository _authorRepo
 @inject IFileUpload _fileUpload
 @inject NavigationManager _navManager
+@inject IToastService _toastService
 
 @using System.IO
 
@@ -123,9 +124,10 @@ else
             }
 
 
-            isSuccess = await _repo.Create(Endpoints.BooksEndpoint, Model);
+            isSuccess = await _repo.Update(Endpoints.BooksEndpoint, Model, Model.Id);
             if (isSuccess)
             {
+                _toastService.ShowWarning("Book Updated Successfully", "");
                 BackToList();
             }
         }
